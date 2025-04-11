@@ -4,7 +4,7 @@ import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ProcessedStatement } from '@/utils/processStatement';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
 interface ExportButtonProps {
@@ -52,7 +52,8 @@ const ExportButton = ({ statementData }: ExportButtonProps) => {
       ]);
       
       // Add table with statement data
-      (doc as any).autoTable({
+      // @ts-ignore - The jsPDF type declaration doesn't include the autoTable plugin
+      doc.autoTable({
         startY: 40,
         head: [['Data', 'Descrição', 'Valor', 'Explicação']],
         body: tableData,
@@ -78,7 +79,8 @@ const ExportButton = ({ statementData }: ExportButtonProps) => {
       });
       
       // Add total at the bottom
-      const finalY = (doc as any).lastAutoTable.finalY;
+      // @ts-ignore - The jsPDF type declaration doesn't include the lastAutoTable property
+      const finalY = doc.lastAutoTable.finalY;
       doc.setFont("helvetica", "bold");
       doc.text(
         `Total: R$ ${statementData.totalAmount.toFixed(2)}`,
