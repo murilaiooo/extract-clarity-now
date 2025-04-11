@@ -5,13 +5,17 @@ import UploadZone from '@/components/UploadZone';
 import StatementViewer from '@/components/StatementViewer';
 import VoiceReader from '@/components/VoiceReader';
 import ExportButton from '@/components/ExportButton';
-import { FileQuestion } from 'lucide-react';
-import { processStatement, processedStatement as mockStatement } from '@/utils/processStatement';
+import { FileQuestion, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { processStatement, ProcessedStatement } from '@/utils/processStatement';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processedStatement, setProcessedStatement] = useState<typeof mockStatement | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+  const [processedStatement, setProcessedStatement] = useState<ProcessedStatement | undefined>(undefined);
+  const { toast } = useToast();
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -24,14 +28,25 @@ const Index = () => {
 
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
+    setError(null);
     console.log("Iniciando processamento do arquivo:", file.name);
+    
     try {
       const result = await processStatement(file);
       console.log("Processamento concluído com sucesso:", result);
       setProcessedStatement(result);
+      toast({
+        title: "Processamento concluído",
+        description: "Seu extrato foi esclarecido com sucesso!"
+      });
     } catch (error) {
       console.error('Erro ao processar extrato:', error);
-      // In a real app, we would show an error message here
+      setError("Não foi possível processar o arquivo. Por favor, tente novamente com outro extrato.");
+      toast({
+        title: "Erro de processamento",
+        description: "Houve um problema ao analisar seu extrato.",
+        variant: "destructive"
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -56,6 +71,14 @@ const Index = () => {
                 Transforme extratos confusos em documentos reorganizados, explicados e visualmente acessíveis.
               </p>
             </div>
+            
+            {error && (
+              <Alert variant="destructive" className="my-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Erro</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             
             <UploadZone onFileUpload={handleFileUpload} />
             

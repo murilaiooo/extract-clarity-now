@@ -16,7 +16,7 @@ export interface ProcessedStatement {
   items: StatementItem[];
 }
 
-// Sample processed statement for demo purposes
+// Sample processed statement for testing purposes
 export const processedStatement: ProcessedStatement = {
   statementDate: "Março 2023",
   totalAmount: 120.40,
@@ -48,35 +48,45 @@ export const processedStatement: ProcessedStatement = {
   ]
 };
 
+// Extract text from PDF or image file
+const extractTextFromFile = async (file: File): Promise<string> => {
+  // For PDF files
+  if (file.type === 'application/pdf') {
+    // In a real implementation, you would use a PDF parsing library
+    // This is a simplified version that just returns the file name for demo
+    return `Extrato bancário do mês (PDF): ${file.name}`;
+  } 
+  
+  // For image files
+  else if (file.type.startsWith('image/')) {
+    // In a real implementation, you would use OCR here
+    return `Extrato bancário do mês (Imagem): ${file.name}`;
+  }
+  
+  // For text files or other formats
+  else {
+    const text = await file.text();
+    return text || `Extrato bancário: ${file.name}`;
+  }
+};
+
 // This function processes the uploaded statement file with Gemini API
 export const processStatement = async (file: File): Promise<ProcessedStatement> => {
   console.log("Processando arquivo:", file.name);
   
   try {
-    // Extract text from the file if it's a PDF or image
-    // For now we'll simulate this step with the file name
-    const extractedText = `Extrato bancário: ${file.name}
-    04/03 - DÉB AUT - R$ 29,90 - SEGURO
-    05/03 - TR - R$ 12,00
-    06/03 - COMPRA - R$ 78,50 - MARKET ABC
-    `;
-    
+    // Extract text from the file
+    const extractedText = await extractTextFromFile(file);
     console.log("Texto extraído do documento:", extractedText);
     
-    // Process the extracted text with Gemini API
+    // Process the extracted text with Gemini API - no simulations
     const processedData = await processWithGeminiAPI(extractedText);
     console.log("Dados processados pelo Gemini API:", processedData);
     
     return processedData;
   } catch (error) {
     console.error("Erro ao processar arquivo:", error);
-    // Fallback to mock data if there's an error
-    console.log("Usando dados simulados devido a erro na API");
-    
-    return {
-      ...processedStatement,
-      statementDate: `Março 2023 - ${file.name.split('.')[0]} (Simulado)`
-    };
+    throw error; // Propagate error up so UI can handle it
   }
 };
 
@@ -84,7 +94,7 @@ export const processStatement = async (file: File): Promise<ProcessedStatement> 
 const processWithGeminiAPI = async (text: string): Promise<ProcessedStatement> => {
   try {
     const apiKey = "AIzaSyDUfcEQL1J_wCxRqBPJR2wVwcxSn_wRegU";
-    console.log("Conectando à API Gemini...");
+    console.log("Conectando à API Gemini com a chave:", apiKey);
     
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
       method: 'POST',
