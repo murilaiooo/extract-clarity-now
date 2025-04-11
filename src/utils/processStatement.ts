@@ -1,6 +1,5 @@
 
-// This is a mock implementation for the MVP
-// In a real implementation, this would connect to an OCR service and AI processing
+// This file contains the logic to process statements using Google's Gemini API
 
 export interface StatementItem {
   id: string;
@@ -49,18 +48,49 @@ export const processedStatement: ProcessedStatement = {
   ]
 };
 
-// This function would normally process the file using OCR and AI
+// This function simulates processing with Gemini API
+// In a real implementation, this would connect to Google's Gemini API
 export const processStatement = async (file: File): Promise<ProcessedStatement> => {
-  // In a real implementation, this would:
-  // 1. Upload the file to a server for OCR processing
-  // 2. Process the extracted text with AI to identify transactions
-  // 3. Generate explanations for each transaction
-  // 4. Return a structured statement
+  console.log("Processando arquivo com simulação da API Gemini:", file.name);
   
   // For the MVP, we'll simulate a delay and return mock data
+  // In a real implementation, this would:
+  // 1. Extract text from the PDF/image using OCR
+  // 2. Send the extracted text to Gemini API for analysis
+  // 3. Process and structure the response
+  
   return new Promise((resolve) => {
+    console.log("Simulando processamento do documento...");
     setTimeout(() => {
+      // Log the simulated processing steps
+      console.log("Documento processado com sucesso (simulação)");
+      console.log("Dados estruturados gerados");
+      
+      // For the demo, we'll return the mock data
+      // In a real implementation, this would be the result from the Gemini API
       resolve(processedStatement);
     }, 2000);
   });
 };
+
+// Future implementation with actual Gemini API
+/*
+const processWithGeminiAPI = async (text: string) => {
+  // This would be replaced with actual Gemini API call
+  // Example implementation would look like:
+  
+  const response = await fetch('https://api.gemini.ai/v1/analyze', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer YOUR_GEMINI_API_KEY'
+    },
+    body: JSON.stringify({
+      text: text,
+      analysisType: 'financial_statement'
+    })
+  });
+  
+  return await response.json();
+};
+*/

@@ -24,11 +24,13 @@ const Index = () => {
 
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
+    console.log("Iniciando processamento do arquivo:", file.name);
     try {
       const result = await processStatement(file);
+      console.log("Processamento concluído com sucesso:", result);
       setProcessedStatement(result);
     } catch (error) {
-      console.error('Error processing statement:', error);
+      console.error('Erro ao processar extrato:', error);
       // In a real app, we would show an error message here
     } finally {
       setIsProcessing(false);
@@ -83,7 +85,7 @@ const Index = () => {
             {processedStatement && !isProcessing && (
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Seu extrato esclarecido</h2>
-                <ExportButton />
+                <ExportButton statementData={processedStatement} />
               </div>
             )}
             

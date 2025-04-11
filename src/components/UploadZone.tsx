@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Upload, File, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ const UploadZone = ({ onFileUpload }: UploadZoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -39,6 +40,13 @@ const UploadZone = ({ onFileUpload }: UploadZoneProps) => {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       validateAndSetFile(file);
+    }
+  };
+  
+  const handleClickUpload = () => {
+    // Trigger the hidden file input when the button is clicked
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
   
@@ -70,10 +78,14 @@ const UploadZone = ({ onFileUpload }: UploadZoneProps) => {
   
   const removeFile = () => {
     setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
   
   const processFile = () => {
     if (selectedFile) {
+      console.log("Processando arquivo:", selectedFile.name);
       onFileUpload(selectedFile);
     }
   };
@@ -105,18 +117,16 @@ const UploadZone = ({ onFileUpload }: UploadZoneProps) => {
                   Suportamos PDF, JPG ou PNG (máximo 10MB)
                 </p>
                 <div>
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <Button>
-                      Selecionar arquivo
-                    </Button>
-                    <input 
-                      id="file-upload" 
-                      type="file"
-                      className="sr-only"
-                      onChange={handleFileInput}
-                      accept=".pdf,.jpg,.jpeg,.png"
-                    />
-                  </label>
+                  <Button onClick={handleClickUpload}>
+                    Selecionar arquivo
+                  </Button>
+                  <input 
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={handleFileInput}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                  />
                 </div>
               </>
             ) : (
