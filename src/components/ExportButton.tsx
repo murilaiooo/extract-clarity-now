@@ -10,7 +10,7 @@ import autoTable from 'jspdf-autotable';
 // Define the type augmentation for jsPDF with autoTable
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: typeof autoTable;
+    autoTable: (options: any) => any;
     lastAutoTable: {
       finalY: number;
     };
