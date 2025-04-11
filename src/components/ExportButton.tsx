@@ -7,10 +7,15 @@ import { ProcessedStatement } from '@/utils/processStatement';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// Add the autotable plugin to jsPDF
-// This extends the jsPDF prototype
-// @ts-ignore
-jsPDF.API.autoTable = autoTable;
+// Define the type augmentation for jsPDF with autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: typeof autoTable;
+    lastAutoTable: {
+      finalY: number;
+    };
+  }
+}
 
 interface ExportButtonProps {
   statementData: ProcessedStatement | undefined;
@@ -83,7 +88,7 @@ const ExportButton = ({ statementData }: ExportButtonProps) => {
       });
       
       // Get the final Y position after the table
-      const finalY = (doc as any).lastAutoTable.finalY;
+      const finalY = doc.lastAutoTable.finalY;
       
       // Add total at the bottom
       doc.setFont("helvetica", "bold");
