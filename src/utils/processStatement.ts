@@ -96,8 +96,8 @@ const processWithGeminiAPI = async (text: string): Promise<ProcessedStatement> =
     const apiKey = "AIzaSyDUfcEQL1J_wCxRqBPJR2wVwcxSn_wRegU";
     console.log("Conectando à API Gemini com a chave:", apiKey);
     
-    // Using gemini-pro which is the free model in the v1 (stable) API
-    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent', {
+    // Updated URL to use the beta version of the API with the correct model name
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ const processWithGeminiAPI = async (text: string): Promise<ProcessedStatement> =
           temperature: 0.2,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024 // Reduzido para garantir compatibilidade com o modelo gratuito
+          maxOutputTokens: 1024
         }
       })
     });
