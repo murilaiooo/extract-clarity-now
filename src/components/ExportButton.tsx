@@ -4,6 +4,8 @@ import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ProcessedStatement } from '@/utils/processStatement';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface ExportButtonProps {
   statementData: ProcessedStatement | undefined;
@@ -22,39 +24,90 @@ const ExportButton = ({ statementData }: ExportButtonProps) => {
       return;
     }
 
-    // In a real implementation, this would generate and download a PDF
     toast({
       title: "Exportando PDF",
       description: "Seu extrato esclarecido será baixado em breve."
     });
     
-    // Generate PDF content (in a real app, we would use a PDF library)
-    const content = `
-      EXTRATO ESCLARECIDO - ${statementData.statementDate}
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF();
       
-      ${statementData.items.map(item => 
-        `${item.date} - ${item.description} - R$ ${item.amount.toFixed(2)}
-         Explicação: ${item.explanation}
-        `
-      ).join('\n\n')}
+      // Add title
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text(`EXTRATO ESCLARECIDO - ${statementData.statementDate}`, 14, 20);
       
-      Total: R$ ${statementData.totalAmount.toFixed(2)}
-    `;
-    
-    // Create a blob and download it
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `extrato-esclarecido-${statementData.statementDate}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "Exportação concluída",
-      description: "Extrato esclarecido exportado com sucesso!"
-    });
+      // Add subtitle with date
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 14, 30);
+      
+      // Prepare data for table
+      const tableData = statementData.items.map(item => [
+        item.date,
+        item.description,
+        `R$ ${item.amount.toFixed(2)}`,
+        item.explanation
+      ]);
+      
+      // Add table with statement data
+      (doc as any).autoTable({
+        startY: 40,
+        head: [['Data', 'Descrição', 'Valor', 'Explicação']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { 
+          fillColor: [155, 135, 245],
+          textColor: [255, 255, 255],
+          fontSize: 12
+        },
+        alternateRowStyles: {
+          fillColor: [240, 240, 250]
+        },
+        styles: {
+          fontSize: 10,
+          cellPadding: 3
+        },
+        columnStyles: {
+          0: { cellWidth: 20 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 25 },
+          3: { cellWidth: 95 }
+        }
+      });
+      
+      // Add total at the bottom
+      const finalY = (doc as any).lastAutoTable.finalY;
+      doc.setFont("helvetica", "bold");
+      doc.text(
+        `Total: R$ ${statementData.totalAmount.toFixed(2)}`,
+        14, finalY + 15
+      );
+      
+      // Add footer with app information
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.text(
+        "Documento gerado por Clareia - Entenda seu extrato com simplicidade",
+        14, doc.internal.pageSize.height - 10
+      );
+      
+      // Save the PDF with a proper name
+      doc.save(`extrato-esclarecido-${statementData.statementDate.replace(/\s/g, '-').toLowerCase()}.pdf`);
+      
+      toast({
+        title: "Exportação concluída",
+        description: "Extrato esclarecido exportado com sucesso!"
+      });
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast({
+        title: "Erro na exportação",
+        description: "Ocorreu um problema ao gerar o PDF. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
