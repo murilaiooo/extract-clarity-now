@@ -5,17 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ProcessedStatement } from '@/utils/processStatement';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
-// Define the type augmentation for jsPDF with autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => any;
-    lastAutoTable: {
-      finalY: number;
-    };
-  }
-}
+// Import and register the autotable plugin
+import 'jspdf-autotable';
 
 interface ExportButtonProps {
   statementData: ProcessedStatement | undefined;
@@ -62,6 +53,7 @@ const ExportButton = ({ statementData }: ExportButtonProps) => {
       ]);
       
       // Add table with statement data using autoTable plugin
+      // This is now correctly called after we imported 'jspdf-autotable'
       doc.autoTable({
         startY: 40,
         head: [['Data', 'Descrição', 'Valor', 'Explicação']],
@@ -88,7 +80,7 @@ const ExportButton = ({ statementData }: ExportButtonProps) => {
       });
       
       // Get the final Y position after the table
-      const finalY = doc.lastAutoTable.finalY;
+      const finalY = (doc as any).lastAutoTable.finalY;
       
       // Add total at the bottom
       doc.setFont("helvetica", "bold");
