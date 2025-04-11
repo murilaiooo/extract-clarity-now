@@ -79,7 +79,7 @@ export const processStatement = async (file: File): Promise<ProcessedStatement> 
     const extractedText = await extractTextFromFile(file);
     console.log("Texto extraído do documento:", extractedText);
     
-    // Process the extracted text with Gemini API - no simulations
+    // Process the extracted text with Gemini API
     const processedData = await processWithGeminiAPI(extractedText);
     console.log("Dados processados pelo Gemini API:", processedData);
     
@@ -96,8 +96,8 @@ const processWithGeminiAPI = async (text: string): Promise<ProcessedStatement> =
     const apiKey = "AIzaSyDUfcEQL1J_wCxRqBPJR2wVwcxSn_wRegU";
     console.log("Conectando à API Gemini com a chave:", apiKey);
     
-    // Updated API endpoint to use the latest generative model (corrected URL)
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent', {
+    // Using gemini-pro which is the free model in the v1 (stable) API
+    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ const processWithGeminiAPI = async (text: string): Promise<ProcessedStatement> =
           temperature: 0.2,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 2048
+          maxOutputTokens: 1024 // Reduzido para garantir compatibilidade com o modelo gratuito
         }
       })
     });
@@ -151,18 +151,57 @@ const processWithGeminiAPI = async (text: string): Promise<ProcessedStatement> =
     console.log("Resposta completa da API Gemini:", data);
     
     // Parse the response text to extract the JSON
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+      console.error("Formato de resposta inesperado:", data);
+      throw new Error("Formato de resposta inesperado da API Gemini");
+    }
+    
     const responseText = data.candidates[0].content.parts[0].text;
     console.log("Texto da resposta:", responseText);
     
-    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
+    // Improved JSON extraction using regex patterns
+    const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/) || 
+                      responseText.match(/```\s*([\s\S]*?)\s*```/) ||
                       responseText.match(/\{[\s\S]*\}/);
                      
     if (jsonMatch) {
-      const jsonString = jsonMatch[1] || jsonMatch[0];
+      let jsonString = jsonMatch[1] || jsonMatch[0];
+      
+      // Clean up any markdown or non-JSON characters
+      jsonString = jsonString.trim().replace(/^```json/, '').replace(/```$/, '').trim();
+      
       console.log("JSON extraído:", jsonString);
       
-      const parsedData = JSON.parse(jsonString);
-      return parsedData as ProcessedStatement;
+      try {
+        const parsedData = JSON.parse(jsonString);
+        
+        // Validate the parsed data structure
+        if (!parsedData.statementDate || !parsedData.items || !Array.isArray(parsedData.items)) {
+          throw new Error("Dados JSON incompletos ou em formato inválido");
+        }
+        
+        // Ensure all items have required fields
+        parsedData.items = parsedData.items.map((item: any, index: number) => {
+          return {
+            id: item.id || String(index + 1),
+            date: item.date || "N/A",
+            description: item.description || "Item sem descrição",
+            amount: typeof item.amount === 'number' ? item.amount : 0,
+            category: item.category || "outros",
+            explanation: item.explanation || "Sem explicação disponível"
+          };
+        });
+        
+        // Calculate total if not provided or incorrect
+        if (!parsedData.totalAmount || typeof parsedData.totalAmount !== 'number') {
+          parsedData.totalAmount = parsedData.items.reduce((sum: number, item: any) => sum + item.amount, 0);
+        }
+        
+        return parsedData as ProcessedStatement;
+      } catch (jsonError) {
+        console.error("Erro ao analisar JSON:", jsonError);
+        throw new Error("Falha ao analisar dados JSON da resposta");
+      }
     }
     
     throw new Error('Não foi possível extrair dados estruturados da resposta da API');
@@ -181,7 +220,7 @@ const processWithGeminiAPI = async (text: string): Promise<ProcessedStatement> =
           description: "Análise do arquivo - erro de API",
           amount: 0,
           category: "erro",
-          explanation: "Ocorreu um erro ao processar o arquivo com a API Gemini. Por favor tente novamente."
+          explanation: "Ocorreu um erro ao processar o arquivo com a API Gemini. Por favor tente novamente com outro extrato."
         }
       ]
     };
