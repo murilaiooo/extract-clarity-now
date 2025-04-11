@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -53,7 +52,6 @@ const ExportButton = ({ statementData }: ExportButtonProps) => {
       ]);
       
       // Add table with statement data using autoTable plugin
-      // This is now correctly called after we imported 'jspdf-autotable'
       doc.autoTable({
         startY: 40,
         head: [['Data', 'Descrição', 'Valor', 'Explicação']],
@@ -80,7 +78,7 @@ const ExportButton = ({ statementData }: ExportButtonProps) => {
       });
       
       // Get the final Y position after the table
-      const finalY = (doc as any).lastAutoTable.finalY;
+      const finalY = doc.lastAutoTable.finalY;
       
       // Add total at the bottom
       doc.setFont("helvetica", "bold");
