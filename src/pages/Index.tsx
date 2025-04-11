@@ -32,6 +32,7 @@ const Index = () => {
     console.log("Iniciando processamento do arquivo:", file.name);
     
     try {
+      // Simulate processing delay if needed
       const result = await processStatement(file);
       console.log("Processamento concluído com sucesso:", result);
       setProcessedStatement(result);
@@ -57,7 +58,7 @@ const Index = () => {
       <Header toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
       
       <main className="flex-1 container py-8">
-        {!processedStatement && !isProcessing ? (
+        {!isProcessing && !processedStatement ? (
           <div className="space-y-8 max-w-3xl mx-auto">
             <div className="text-center space-y-4">
               <div className="inline-block p-3 bg-primary/10 rounded-full mb-4">

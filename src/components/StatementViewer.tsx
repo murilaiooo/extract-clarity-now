@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ExplanationTooltip from './ExplanationTooltip';
-import { ShieldCheck, Building, ShoppingBag } from 'lucide-react';
+import { ShieldCheck, Building, ShoppingBag, Loader } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { processedStatement } from '@/utils/processStatement';
+import { Progress } from '@/components/ui/progress';
 
 interface StatementViewerProps {
   statementData?: typeof processedStatement;
@@ -26,6 +27,25 @@ const getIconForCategory = (category: string) => {
 
 const StatementViewer = ({ statementData, isProcessing }: StatementViewerProps) => {
   const [expandedItems, setExpandedItems] = useState<{ [key: string]: boolean }>({});
+  const [progress, setProgress] = useState(0);
+
+  React.useEffect(() => {
+    if (isProcessing) {
+      const timer = setInterval(() => {
+        setProgress((prevProgress) => {
+          if (prevProgress >= 90) {
+            return prevProgress;
+          }
+          return prevProgress + 5;
+        });
+      }, 500);
+
+      return () => {
+        clearInterval(timer);
+        setProgress(0);
+      };
+    }
+  }, [isProcessing]);
 
   // Toggle explanation visibility
   const toggleExplanation = (itemId: string) => {
@@ -37,17 +57,26 @@ const StatementViewer = ({ statementData, isProcessing }: StatementViewerProps) 
 
   if (isProcessing) {
     return (
-      <Card className="w-full animate-pulse">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
-            <div className="h-7 bg-muted rounded w-1/3"></div>
-            <div className="h-5 bg-muted rounded w-1/4"></div>
+            <div>Analisando seu documento</div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {Array(5).fill(0).map((_, i) => (
-            <div key={i} className="h-16 bg-muted rounded"></div>
-          ))}
+        <CardContent className="space-y-8">
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="mb-4 relative">
+              <Loader className="h-12 w-12 text-primary animate-spin" />
+            </div>
+            <h3 className="text-xl font-medium mb-2">Processando seu extrato</h3>
+            <p className="text-muted-foreground max-w-sm mb-6">
+              Estamos analisando seu documento e identificando os itens para torná-los mais claros e compreensíveis.
+            </p>
+            <div className="w-full max-w-md">
+              <Progress value={progress} className="h-2" />
+              <p className="text-sm text-muted-foreground mt-2">Por favor, aguarde alguns instantes...</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
